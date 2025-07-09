@@ -1,7 +1,7 @@
 /* =======================================================
  *  汎用 画像スタックスライダー（リストを JS に埋め込み）
  * ======================================================= */
-
+console.log('✅ slider loaded');
 /* ------------ 1) 画像 URL 一覧 ------------ */
 const IMAGE_LIST = [
   　'https://medilink-contents-qb-stg.s3.ap-northeast-1.amazonaws.com/9B00000/images/CTimg000.jpg',
