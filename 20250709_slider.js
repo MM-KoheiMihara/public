@@ -1,18 +1,21 @@
 /* =======================================================
- *  汎用 画像スタック・スライダー（alt ちらつき防止版）
+ *  画像スタック・スライダー 2025-07-09 Dbg版
  * ======================================================= */
 (() => {
+  const log = (...args) => console.log('[slider]', ...args);
+
   /* ---------- 1) 画像リスト取得 ---------- */
-  const viewer  = document.getElementById('viewer');
-  if (!viewer) { console.error('viewer 要素が見つかりません。'); return; }
+  const viewer = document.getElementById('viewer');
+  if (!viewer) { console.error('[slider] viewer 要素が見つかりません'); return; }
 
-  const IMAGE_LIST = (viewer.dataset.images || '')
-                     .split(',')
-                     .map(s => s.trim())
-                     .filter(Boolean);
+  const raw   = viewer.dataset.images || '';
+  const urls  = raw.split(',').map(s => s.trim()).filter(Boolean);
 
-  if (IMAGE_LIST.length === 0) {
-    console.error('data-images が空、または URL が無効です。');
+  log('取得した data-images =', raw);
+  log('パース後の URL 数   =', urls.length);
+
+  if (urls.length === 0) {
+    console.error('[slider] data-images が空です');
     return;
   }
 
@@ -21,26 +24,35 @@
   const range = document.getElementById('sliceRange');
   const cnt   = document.getElementById('counter');
   if (!img || !range || !cnt) {
-    console.error('ctImg / sliceRange / counter のいずれかが見つかりません。');
-    return;
+    console.error('[slider] 必要要素が見つかりません'); return;
   }
 
-  /* ---------- 3) 初期化（透明 → 読み込み後に表示） ---------- */
+  /* ---------- 3) 初期化 ---------- */
   range.min = 0;
-  range.max = IMAGE_LIST.length - 1;
+  range.max = urls.length - 1;
   range.value = 0;
-  img.onload = () => { img.style.opacity = '1'; };   // 読み込めたら表示
-  img.src = IMAGE_LIST[0];
-  cnt.textContent = `1 / ${IMAGE_LIST.length}`;
+  cnt.textContent = `1 / ${urls.length}`;
+
+  /* ALT が出るのを防ぐためロード成功時にだけ表示 */
+  const showImage = src => {
+    img.style.opacity = '0';
+    img.onload = () => { img.style.opacity = '1'; };
+    img.onerror = () => {
+      console.error('[slider] ロード失敗 →', src);
+      cnt.textContent = '⚠️ 読込失敗';
+    };
+    img.src = src;
+    log('切替 →', src);
+  };
+  showImage(urls[0]);
 
   /* ---------- 4) スライダー操作 ---------- */
   range.addEventListener('input', e => {
-    img.style.opacity = '0';                         // 切替時に透明化
     const idx = Number(e.target.value);
-    img.src = IMAGE_LIST[idx];
-    cnt.textContent = `${idx + 1} / ${IMAGE_LIST.length}`;
+    cnt.textContent = `${idx + 1} / ${urls.length}`;
+    showImage(urls[idx]);
   });
 
   /* ---------- 5) プリロード（任意） ---------- */
-  IMAGE_LIST.slice(1).forEach(src => { const b = new Image(); b.src = src; });
+  urls.slice(1).forEach(u => { const b = new Image(); b.src = u; });
 })();
